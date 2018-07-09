@@ -49,7 +49,7 @@ from SmartMeshSDK.IpMgrConnectorMux    import IpMgrSubscribe
 def version_string():
     return '.'.join([str(v) for v in sdk_version.VERSION])
 
-DEFAULT_HOST       = '127.0.0.1' 
+DEFAULT_HOST       = '127.0.0.1'
 DEFAULT_PORT       = 9900
 
 OTAP_EXTENSIONS    = ['.otap', '.otap2']

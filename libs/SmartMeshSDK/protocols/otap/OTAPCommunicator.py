@@ -34,7 +34,7 @@ NACK = 14
 
 # TODO: refactor -- MacAddress should be a class
 def print_mac(m):
-    return '-'.join(["%02X" % b for b in m]) 
+    return '-'.join(["%02X" % b for b in m])
 
 
 BROADCAST_ADDR = 8 * [ 0xFF, ]
