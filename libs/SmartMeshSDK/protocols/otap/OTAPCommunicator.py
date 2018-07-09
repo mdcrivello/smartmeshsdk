@@ -34,14 +34,14 @@ NACK = 14
 
 # TODO: refactor -- MacAddress should be a class
 def print_mac(m):
-    return '-'.join(["%02X" % b for b in m])
+    return '-'.join(["%02X" % b for b in m]) 
 
 
 BROADCAST_ADDR = 8 * [ 0xFF, ]
 
 # delays and timeouts
 
-OtapOptions = namedtuple('OtapOptions', 'broadcast_threshold retry_delay data_retries inter_command_delay post_data_delay wait_timeout reliable_retry_delay reliable_command_timeout reliable_max_retries')
+OtapOptions = namedtuple('OtapOptions', 'broadcast_threshold retry_delay data_retries inter_command_delay post_data_delay wait_timeout reliable_retry_delay reliable_command_timeout reliable_max_retries otap_port')
 
 RETRY_DELAY = 1       # retry delay if Picard can't accept the command
 DATA_RETRIES = 10     # number of retries before skipping the block 
@@ -61,6 +61,7 @@ DEFAULT_OPTIONS = OtapOptions(
     reliable_retry_delay = ReliableCommander.RETRY_DELAY,
     reliable_command_timeout = ReliableCommander.COMMAND_TIMEOUT,
     reliable_max_retries = ReliableCommander.COMMAND_RETRIES,
+    otap_port = OTAP_PORT,
     )
 
 
@@ -175,7 +176,7 @@ class OTAPCommunicator(object):
     
     def data_callback(self, data):
         # handle OTAP command responses
-        if data.src_port == OTAP_PORT:
+        if data.src_port == self.options.otap_port:
             index = 0
             # parse the payload for ALL responses in the packet
             while index < len(data.payload):
@@ -495,7 +496,7 @@ class OTAPCommunicator(object):
     def send_otap_cmd(self, mac, cmd_id, data):
         cmd = struct.pack('BB', cmd_id, len(data)) + data
         count = 0
-        (rc, cbid) = self.send_data(mac, cmd, OTAP_PORT)
+        (rc, cbid) = self.send_data(mac, cmd, self.options.otap_port)
         while rc != 0 and count < self.options.data_retries:
             if rc == END_OF_LIST:
                 # if the mote doesn't exist, return
@@ -507,11 +508,11 @@ class OTAPCommunicator(object):
             # Otherwise, wait and retry several times
             time.sleep(self.options.retry_delay)
             log.debug('Resending otap block to %s, error: %d' % (print_mac(mac), rc))
-            (rc, cbid) = self.send_data(mac, cmd, OTAP_PORT)
+            (rc, cbid) = self.send_data(mac, cmd, self.options.otap_port)
             count += 1
 
     def send_reliable_cmd(self, mac, cmd_id, data):
-        result = self.orc.send(mac, OTAP_PORT, cmd_id, data)
+        result = self.orc.send(mac, self.options.otap_port, cmd_id, data)
         # wait for the inter-command delay after sending any reliable message
         time.sleep(self.options.inter_command_delay)
         return result

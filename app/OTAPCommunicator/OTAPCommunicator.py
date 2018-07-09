@@ -49,7 +49,7 @@ from SmartMeshSDK.IpMgrConnectorMux    import IpMgrSubscribe
 def version_string():
     return '.'.join([str(v) for v in sdk_version.VERSION])
 
-DEFAULT_HOST       = '127.0.0.1'
+DEFAULT_HOST       = '127.0.0.1' 
 DEFAULT_PORT       = 9900
 
 OTAP_EXTENSIONS    = ['.otap', '.otap2']
@@ -100,6 +100,9 @@ parser.add_option("--host", dest="host",
 parser.add_option("-p", "--port", dest="port", 
                   default=DEFAULT_PORT,
                   help="TCP port of Serial Mux")
+parser.add_option("-o", "--OTAPport", dest="OTAP_Port", 
+                  default=OTAPStructs.OTAP_PORT,
+                  help="port on mote used for OTAP cmd (default: 0xF0B1)")
 parser.add_option("-m", "--mote", dest="motes", default=[],
                   action="append",
                   help="List of mote(s) to send files")
@@ -118,6 +121,8 @@ if options.verbose:
 
 # update values in OTAP options
 otap_options = otap_options._replace(inter_command_delay=int(options.delay))
+if options.OTAP_Port != OTAPStructs.OTAP_PORT:
+    otap_options = otap_options._replace(otap_port=int(options.OTAP_Port, 16))
 
 #============================ body ============================================
 
