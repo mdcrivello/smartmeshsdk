@@ -54,12 +54,54 @@ DEFAULT_PORT       = 9900
 
 OTAP_EXTENSIONS    = ['.otap', '.otap2']
 
+#============================ command line options ============================
+
+from optparse import OptionParser
+
+otap_options = OTAPCommunicator.DEFAULT_OPTIONS
+
+# Parse the command line
+parser = OptionParser("usage: %prog [options] <file(s)>...",
+                      version="OTAP Communicator " + version_string())
+parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
+                  default=False, 
+                  help="Print verbose messages")
+parser.add_option("--host", dest="host", 
+                  default=DEFAULT_HOST,
+                  help="Host of Serial Mux")
+parser.add_option("-p", "--port", dest="port", 
+                  default=DEFAULT_PORT,
+                  help="TCP port of Serial Mux")
+parser.add_option("-o", "--otapport", dest="otap_port", 
+                  type=int, default=OTAPStructs.OTAP_PORT,
+                  help="port on mote used for OTAP cmd (default: 0xF0B1)")
+parser.add_option("-l", "--log-file", dest="logFile", 
+                  default='otap_communicator.log',
+                  help="Path to log file relative to OTAPCommunicator.py (default: otap_communicator.log")
+parser.add_option("-m", "--mote", dest="motes", default=[],
+                  action="append",
+                  help="List of mote(s) to send files")
+parser.add_option("--delay", dest="delay", default=otap_options.inter_command_delay,
+                  help="Length of delay between sending OTAP commands (seconds)")
+parser.add_option("--nostart", dest="autorun", default=True,
+                  action="store_false",
+                  help="Don't start running the OTAP process automatically (use interactive mode)")
+(options, args) = parser.parse_args()
+
+
+# update values in OTAP options
+otap_options = otap_options._replace(inter_command_delay=int(options.delay))
+otap_options = otap_options._replace(otap_port=options.otap_port)
+
 #============================ logging =========================================
 
 import logging
 import logging.handlers
 
-LOG_FILENAME = 'otap_communicator.log'
+if not os.path.exists(os.path.dirname(options.logFile)):
+  os.makedirs(os.path.dirname(options.logFile))
+
+LOG_FILENAME = options.logFile
 LOG_FORMAT   = "%(asctime)s [%(name)s:%(levelname)s] %(message)s"
 
 # Set up a specific logger with our desired output level
@@ -82,47 +124,11 @@ for l in LOGGERS:
     logging.getLogger(l).addHandler(handler)
     logging.getLogger(l).setLevel(logging.INFO)
 
-#============================ command line options ============================
-
-from optparse import OptionParser
-
-otap_options = OTAPCommunicator.DEFAULT_OPTIONS
-
-# Parse the command line
-parser = OptionParser("usage: %prog [options] <file(s)>...",
-                      version="OTAP Communicator " + version_string())
-parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
-                  default=False, 
-                  help="Print verbose messages")
-parser.add_option("--host", dest="host", 
-                  default=DEFAULT_HOST,
-                  help="Host of Serial Mux")
-parser.add_option("-p", "--port", dest="port", 
-                  default=DEFAULT_PORT,
-                  help="TCP port of Serial Mux")
-parser.add_option("-o", "--OTAPport", dest="OTAP_Port", 
-                  default=OTAPStructs.OTAP_PORT,
-                  help="port on mote used for OTAP cmd (default: 0xF0B1)")
-parser.add_option("-m", "--mote", dest="motes", default=[],
-                  action="append",
-                  help="List of mote(s) to send files")
-parser.add_option("--delay", dest="delay", default=otap_options.inter_command_delay,
-                  help="Length of delay between sending OTAP commands (seconds)")
-parser.add_option("--nostart", dest="autorun", default=True,
-                  action="store_false",
-                  help="Don't start running the OTAP process automatically (use interactive mode)")
-(options, args) = parser.parse_args()
-
 if options.verbose:
     h = logging.StreamHandler(sys.stdout)
     h.setFormatter(logging.Formatter("[%(name)s:%(levelname)s] %(message)s"))
     for l in LOGGERS:
         logging.getLogger(l).addHandler(h)
-
-# update values in OTAP options
-otap_options = otap_options._replace(inter_command_delay=int(options.delay))
-if options.OTAP_Port != OTAPStructs.OTAP_PORT:
-    otap_options = otap_options._replace(otap_port=int(options.OTAP_Port, 16))
 
 #============================ body ============================================
 
