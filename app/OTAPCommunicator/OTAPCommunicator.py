@@ -76,7 +76,7 @@ parser.add_option("-o", "--otapport", dest="otap_port",
                   type=int, default=OTAPStructs.OTAP_PORT,
                   help="port on mote used for OTAP cmd (default: 0xF0B1)")
 parser.add_option("-l", "--log-file", dest="logFile", 
-                  default='otap_communicator.log',
+                  default=os.path.join('otap_communicator.log', os.pardir),
                   help="Path to log file relative to OTAPCommunicator.py (default: otap_communicator.log")
 parser.add_option("-m", "--mote", dest="motes", default=[],
                   action="append",
