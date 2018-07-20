@@ -239,15 +239,18 @@ def main(opts, files):
         mgr.disconnect()
         
     else:
-        # Useful imports for debug mode
-        import time
-        import struct
-        # Welcome!
-        print "You can use the 'mgr' variable to call Manager API functions."
-        print ">>> help(mgr)"
-        print "You can use the 'comm' variable to interact with the OTAP Communicator."
-        print ">>> help(comm)"
-        print "Run mgr.disconnect() before exiting the interactive shell."
+        # # Useful imports for debug mode
+        # import time
+        # import struct
+        # # Welcome!
+        # print "You can use the 'mgr' variable to call Manager API functions."
+        # print ">>> help(mgr)"
+        # print "You can use the 'comm' variable to interact with the OTAP Communicator."
+        # print ">>> help(comm)"
+        # print "Run mgr.disconnect() before exiting the interactive shell."
+
+        print "Specified motes are not in the network"
+        mgr.disconnect()
 
 
 if __name__=='__main__':
