@@ -111,7 +111,28 @@ Issuing `status` (as in the example below) allows you to verify the manager was 
                            'ManagerHandler@COM10']}
 ```
 
-The `disconnectmanager ` command allows you to disconnect from a manager.
+The `connectserialmux` command allows you to connect to an additional SmartMesh IP manager through a serialmux connection.
+Issuing `status` (as in the example below) allows you to verify the manager was indeed added.
+
+**Note**: you can connect to as many managers as you want.
+
+```
+> connectserialmux mux 127.0.0.1 9900
+> status
+{   'SmartMesh SDK version': '1.3.0.1',
+    'current time': '07/25/2018 16:12:25',
+    'managers': {   'mux': 'connected'},
+    'running since': '07/25/2018 16:11:07 (0:01:18.180104 ago)',
+    'threads running': [   'MainThread',
+                           'SnapshotThread',
+                           'ManagerHandler@mux',
+                           'IpMgrConnectorMuxInternal',
+                           'IpMgrSubscribe',
+                           'DustCli',
+                           'WebServer']}
+```
+
+The `disconnectmanager ` command allows you to disconnect from a manager or serialmux connection.
 Issuing `status` (as in the example below) allows you to verify the manager is indeed gone.
 
 ```
