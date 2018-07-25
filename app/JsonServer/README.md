@@ -9,12 +9,12 @@ For a fun tutorial on how to use it, click [here](https://dustcloud.atlassian.ne
 
 The following aliases are used throughout this documentation:
 
-| alias            | meaning                                                              |
-|------------------|----------------------------------------------------------------------|
-| `{{host}}`       | IP address or hostname of the machine running `JsonServer`           |
-| `{{port}}`       | TCP port `JsonServer` listens to (default: 8080)                     |
-| `{{serialport}}` | serial port a SmartMesh IP manager is connected to (e.g. `COM27`)    |
-| `{{mote}}`       | MAC address of the mote of interest (e.g. `00-17-0d-00-00-38-06-45`) |
+| alias            | meaning                                                                                          |
+|------------------|--------------------------------------------------------------------------------------------------|
+| `{{host}}`       | IP address or hostname of the machine running `JsonServer`                                       |
+| `{{port}}`       | TCP port `JsonServer` listens to (default: 8080)                                                 |
+| `{{serialport}}` | serial port or serialmux name a SmartMesh IP manager is connected to (e.g. `COM27` or `mux1`)    |
+| `{{mote}}`       | MAC address of the mote of interest (e.g. `00-17-0d-00-00-38-06-45`)                             |
 
 # Command Line Interface
 
