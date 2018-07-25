@@ -99,7 +99,6 @@ class IpMgrConnectorMuxInternal(ApiConnector.ApiConnector ) :
             self.socket.close()
         except socket.error :
             pass    # Ignore socket error 
-        # ApiConnector.ApiConnector.disconnect(self, reason)
         
     def send(self, cmdNames, params) :
         self.sendLock.acquire()

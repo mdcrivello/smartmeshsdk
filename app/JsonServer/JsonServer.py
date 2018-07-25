@@ -21,7 +21,6 @@ import pprint
 import threading
 import json
 import traceback
-import datetime
 
 # requirements
 import requests
@@ -43,7 +42,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 class JsonServer(object):
     
-    def __init__(self, tcpport, autoaddmgr, autodeletemgr, serialport, configfilename, hostIP, useSerialMux=False, serialmuxName=None):
+    def __init__(self, tcpport, autoaddmgr, autodeletemgr, serialport, configfilename, hostIP):
         
         # store params
         self.tcpport              = tcpport
@@ -59,7 +58,7 @@ class JsonServer(object):
             autodeletemgr         = autodeletemgr,
             serialport            = serialport,
             configfilename        = configfilename,
-            notifCb               = self._notif_cb
+            notifCb               = self._notif_cb,
         )
         
         #=== CLI interface
@@ -235,7 +234,6 @@ class JsonServer(object):
         
         time.sleep(.3)
         print "bye bye."
-        # sys.exit(0)
     
     def _clihandle_status(self,params):
         pp.pprint(self.jsonManager.status_GET())

@@ -187,7 +187,6 @@ class ManagerHandler(threading.Thread):
                     # wait to reconnect
                     print err
                     time.sleep(1)
-                    pass
 
                 else:
                     self.reconnectEvent.clear()
@@ -505,14 +504,6 @@ class JsonManager(object):
                cb     = self._availablemanagers_cb,
                period = 60,
             )
-            # newmanagers_serialmux = {
-            #   'default_serialmux_manager': {
-            #     'host': '10.68.115.88',
-            #     'port': '9900'
-            #   }
-            # }
-            # self.managers_PUT(newmanagers_serialmux=newmanagers_serialmux)
-            # self.serialmuxName        = serialmuxName if serialmuxName != None else 'serialmux_{}'.format(datetime.datetime.now())
         
         # if autodeletemgr, start DeleMgrThread
         if self.autodeletemgr:
