@@ -21,6 +21,7 @@ import pprint
 import threading
 import json
 import traceback
+import datetime
 
 # requirements
 import requests
@@ -42,7 +43,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 class JsonServer(object):
     
-    def __init__(self, tcpport, autoaddmgr, autodeletemgr, serialport, configfilename):
+    def __init__(self, tcpport, autoaddmgr, autodeletemgr, serialport, configfilename, hostIP, useSerialMux=False, serialmuxName=None):
         
         # store params
         self.tcpport              = tcpport
@@ -50,6 +51,7 @@ class JsonServer(object):
         self.autodeletemgr        = autodeletemgr
         self.serialport           = serialport
         self.configfilename       = configfilename
+        self.hostIP               = hostIP
         
         # local variables
         self.jsonManager          = JsonManager.JsonManager(
@@ -57,7 +59,7 @@ class JsonServer(object):
             autodeletemgr         = autodeletemgr,
             serialport            = serialport,
             configfilename        = configfilename,
-            notifCb               = self._notif_cb,
+            notifCb               = self._notif_cb
         )
         
         #=== CLI interface
@@ -90,10 +92,17 @@ class JsonServer(object):
             callback              = self._clihandle_connectmanager,
         )
         self.cli.registerCommand(
+            name                  = 'connectserialmux',
+            alias                 = 'cm',
+            description           = 'connect to a SerialMux',
+            params                = ['serialmuxName', 'host', 'port'],
+            callback              = self._clihandle_connectserialmux,
+        )
+        self.cli.registerCommand(
             name                  = 'disconnectmanager',
             alias                 = 'dm',
             description           = 'disconnect from a manager\'s API serial port',
-            params                = ['serialport'],
+            params                = ['serialport or serialmuxName'],
             callback              = self._clihandle_disconnectmanager,
         )
         
@@ -187,7 +196,7 @@ class JsonServer(object):
             target = self._bottle_try_running_forever,
             args   = (self.websrv.run,),
             kwargs = {
-                'host'          : '127.0.0.1',
+                'host'          : self.hostIP,
                 'port'          : self.tcpport,
                 'quiet'         : True,
                 'debug'         : False,
@@ -209,9 +218,9 @@ class JsonServer(object):
                     print 'FATAL: cannot open TCP port {0}.'.format(kwargs['port'])
                     print '    Is another application running on that port?'
                 else:
-                    print logError(err)
+                    print err
             except Exception as err:
-                print logError(err)
+                print err
             print '    Trying again in {0} seconds'.format(RETRY_PERIOD),
             for _ in range(RETRY_PERIOD):
                 time.sleep(1)
@@ -226,6 +235,7 @@ class JsonServer(object):
         
         time.sleep(.3)
         print "bye bye."
+        # sys.exit(0)
     
     def _clihandle_status(self,params):
         pp.pprint(self.jsonManager.status_GET())
@@ -235,6 +245,15 @@ class JsonServer(object):
     
     def _clihandle_connectmanager(self,params):
         self.jsonManager.managers_PUT([params[0],])
+    
+    def _clihandle_connectserialmux(self,params):
+        newmanagers_serialmux = {
+          params[0]: {
+            'host': params[1],
+            'port': params[2]
+          }
+        }
+        self.jsonManager.managers_PUT(newmanagers_serialmux=newmanagers_serialmux)
     
     def _clihandle_disconnectmanager(self,params):
         self.jsonManager.managers_DELETE([params[0],])
@@ -478,10 +497,11 @@ def main(args):
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--tcpport',        default=8080)
-    parser.add_argument('--autoaddmgr',     default=True)
-    parser.add_argument('--autodeletemgr',  default=True)
-    parser.add_argument('--serialport',     default=None)
-    parser.add_argument('--configfilename', default='JsonServer.config')
+    parser.add_argument('--tcpport',           default=8080)
+    parser.add_argument('--autoaddmgr',        default=False, help='Only supports serialport connections')
+    parser.add_argument('--autodeletemgr',     default=False)
+    parser.add_argument('--serialport',        default=None)
+    parser.add_argument('--configfilename',    default='JsonServer.config')
+    parser.add_argument('--hostIP',            default='127.0.0.1')
     args = vars(parser.parse_args())
     main(args)

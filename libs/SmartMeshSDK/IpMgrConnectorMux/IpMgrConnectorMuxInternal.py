@@ -93,12 +93,13 @@ class IpMgrConnectorMuxInternal(ApiConnector.ApiConnector ) :
         if not self.isConnected :
             return
         try :
+            ApiConnector.ApiConnector.disconnect(self, reason)
             self.socket.send("stop")
             self.socket.shutdown(socket.SHUT_RD)    # start disconnection
             self.socket.close()
         except socket.error :
             pass    # Ignore socket error 
-        ApiConnector.ApiConnector.disconnect(self, reason)
+        # ApiConnector.ApiConnector.disconnect(self, reason)
         
     def send(self, cmdNames, params) :
         self.sendLock.acquire()
@@ -188,7 +189,7 @@ class IpMgrConnectorMuxInternal(ApiConnector.ApiConnector ) :
                 if not buf :
                     raise socket.error(0, "Connection close")
                 self.muxMsg.parse(buf)
-        except socket.error, way:
+        except Exception as way:
             # Disconnect process -------------------------------------------------
             if way.args[0] == 9 :   # 
                 way = socket.error(0, "Connection close")

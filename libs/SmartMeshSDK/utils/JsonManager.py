@@ -24,6 +24,7 @@ from SmartMeshSDK                      import sdk_version
 from SmartMeshSDK.utils                import FormatUtils as u, \
                                               SerialScanner
 from SmartMeshSDK.IpMgrConnectorSerial import IpMgrConnectorSerial
+from SmartMeshSDK.IpMgrConnectorMux    import IpMgrConnectorMux
 from SmartMeshSDK.IpMgrConnectorMux    import IpMgrSubscribe
 from SmartMeshSDK.ApiException         import APIError,      \
                                               ConnectionError
@@ -112,11 +113,14 @@ class ManagerHandler(threading.Thread):
     \brief Connects to the manager, re-connects automatically
     '''
     
-    def __init__(self,serialport,notifHandler):
+    def __init__(self,serialport,notifHandler,useSerialMux=False,serialmuxHost='127.0.0.1',serialmuxPort='9900'):
 
         # store params
         self.serialport      = serialport
         self.notifHandler    = notifHandler
+        self.useSerialMux    = useSerialMux
+        self.serialmuxHost   = serialmuxHost
+        self.serialmuxPort   = serialmuxPort
         
         # local variables
         self.reconnectEvent  = threading.Event()
@@ -135,10 +139,14 @@ class ManagerHandler(threading.Thread):
                 try:
                     
                     # connect to the manager
-                    self.connector = IpMgrConnectorSerial.IpMgrConnectorSerial()
-                    self.connector.connect({
-                        'port': self.serialport,
-                    })
+                    if(self.useSerialMux):
+                        self.connector = IpMgrConnectorMux.IpMgrConnectorMux()
+                        self.connector.connect({'host': self.serialmuxHost, 'port': int(self.serialmuxPort)})
+                    else:
+                        self.connector = IpMgrConnectorSerial.IpMgrConnectorSerial()
+                        self.connector.connect({
+                            'port': self.serialport,
+                        })
 
                     # subscribe to notifications
                     self.subscriber = IpMgrSubscribe.IpMgrSubscribe(self.connector)
@@ -177,7 +185,9 @@ class ManagerHandler(threading.Thread):
                         pass
 
                     # wait to reconnect
+                    print err
                     time.sleep(1)
+                    pass
 
                 else:
                     self.reconnectEvent.clear()
@@ -194,13 +204,12 @@ class ManagerHandler(threading.Thread):
     #======================== public ==========================================
     
     def close(self):
-
+        self.goOn = False
         try:
             self.connector.disconnect()
-        except Exception:
+        except Exception as err:
+            print err
             pass
-
-        self.goOn = False
     
     def isConnected(self):
         try:
@@ -489,13 +498,21 @@ class JsonManager(object):
         # connect to managers (if any)
         self._syncManagers()
         
-        # if autoaddmgr, have SerialScanner looks for manager
+        # if autoaddmgr, have SerialScanner looks for manager (only supports serialport)
         if self.autoaddmgr:
             self.serialScanner = SerialScanner.SerialScanner()
             self.serialScanner.availableManagerNotifier(
                cb     = self._availablemanagers_cb,
                period = 60,
             )
+            # newmanagers_serialmux = {
+            #   'default_serialmux_manager': {
+            #     'host': '10.68.115.88',
+            #     'port': '9900'
+            #   }
+            # }
+            # self.managers_PUT(newmanagers_serialmux=newmanagers_serialmux)
+            # self.serialmuxName        = serialmuxName if serialmuxName != None else 'serialmux_{}'.format(datetime.datetime.now())
         
         # if autodeletemgr, start DeleMgrThread
         if self.autodeletemgr:
@@ -528,10 +545,16 @@ class JsonManager(object):
         
         with self.dataLock:
             try:
-                returnVal = self.managerHandlers[manager].connector.send(
-                    commandArray = commandArray,
-                    fields       = fields,
-                )
+                if(manager in self.config['managers_serialmux']):
+                  returnVal = self.managerHandlers[manager].connector.send(
+                      cmdNames = commandArray,
+                      params   = fields,
+                  )
+                else:
+                  returnVal = self.managerHandlers[manager].connector.send(
+                      commandArray = commandArray,
+                      fields       = fields,
+                  )
             except APIError as err:
                 returnVal = {
                     'RC': err.rc,
@@ -697,11 +720,15 @@ class JsonManager(object):
     def snapshot_GET(self):
         return self.snapshotThread.getLastsnapshots()
     
-    def managers_PUT(self,newmanagers):
+    def managers_PUT(self,newmanagers=[], newmanagers_serialmux={}):
         with self.dataLock:
-            for m in newmanagers:
-                if m not in self.config['managers']:
-                    self.config['managers'] += [m]
+            for m in newmanagers_serialmux:
+                if m not in self.config['managers_serialmux']:
+                    self.config['managers_serialmux'][m] = newmanagers_serialmux[m]
+            else:
+              for m in newmanagers:
+                  if m not in self.config['managers']:
+                      self.config['managers'] += [m]
         self._saveConfig()
         self._syncManagers()
     
@@ -711,7 +738,10 @@ class JsonManager(object):
                 try:
                     self.config['managers'].remove(m)
                 except ValueError:
-                    pass # happens when manager doesn't exist
+                    try:
+                        del self.config['managers_serialmux'][m]
+                    except ValueError:
+                        pass # happens when manager doesn't exist
         self._saveConfig()
         self._syncManagers()
     
@@ -938,9 +968,13 @@ class JsonManager(object):
             for m in self.config['managers']:
                 if m not in self.managerHandlers:
                     self.managerHandlers[m] = ManagerHandler(m,self._manager_raw_notif_handler)
+            #serialmux
+            for m in self.config['managers_serialmux']:
+                if m not in self.managerHandlers:
+                    self.managerHandlers[m] = ManagerHandler(m,self._manager_raw_notif_handler, useSerialMux=True, serialmuxHost=self.config['managers_serialmux'][m]['host'], serialmuxPort=self.config['managers_serialmux'][m]['port'])
             # remove
             for m in self.managerHandlers.keys():
-                if m not in self.config['managers']:
+                if m not in self.config['managers'] and m not in self.config['managers_serialmux']:
                     self.managerHandlers[m].close()
                     del self.managerHandlers[m]
     
@@ -957,12 +991,24 @@ class JsonManager(object):
                 else:
                    raise IOError
             except IOError as err:
+                managers = []
+                # managers_serialmux structure:
+                # managers_serialmux ={
+                #   'mux_name_1':{
+                #     'host': '127.0.0.1',
+                #     'port': '9900',
+                #   },
+                #   'mux_name_2':{
+                #     'host': '127.0.0.1',
+                #     'port': '8888',
+                #   }
+                # }
+                managers_serialmux = {}
                 if self.serialport:
                     managers = [self.serialport]
-                else:
-                    managers = []
                 self.config     = {
                     'managers':         managers,
+                    'managers_serialmux': managers_serialmux,
                     'notification_urls': {
                         'event':            [
                             'http://127.0.0.1:1880/event',
