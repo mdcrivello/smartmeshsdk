@@ -259,5 +259,5 @@ if __name__=='__main__':
     except KeyboardInterrupt:
         mgr.disconnect()
     finally:
-        sys.exit()
+        sys.exit(0)
         
