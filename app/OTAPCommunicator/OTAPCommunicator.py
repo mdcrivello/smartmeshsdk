@@ -260,11 +260,6 @@ if __name__=='__main__':
         main(options, args)
     except KeyboardInterrupt:
         mgr.disconnect()
-    except Exception as e:
-        error = e
-        pass
     finally:
-        if(error != ""):
-            print error
         print "OTAP Complete"
         
