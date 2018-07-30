@@ -251,7 +251,7 @@ def main(opts, files):
 
         print "Specified motes are not in the network"
         mgr.disconnect()
-        comm.close()
+        comm.cancel()
 
 
 if __name__=='__main__':
