@@ -255,10 +255,16 @@ def main(opts, files):
 
 
 if __name__=='__main__':
+    error = ""
     try:
         main(options, args)
     except KeyboardInterrupt:
         mgr.disconnect()
+    except Exception as e:
+        error = e
+        pass
     finally:
-        sys.exit(0)
+        if(error != ""):
+            print error
+        print "OTAP Complete"
         
