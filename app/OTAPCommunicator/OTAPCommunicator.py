@@ -81,8 +81,10 @@ parser.add_option("-l", "--log-file", dest="logFile",
 parser.add_option("-m", "--mote", dest="motes", default=[],
                   action="append",
                   help="List of mote(s) to send files")
-parser.add_option("--delay", dest="delay", default=otap_options.inter_command_delay,
+parser.add_option("--delay_command", dest="delay_command", default=otap_options.inter_command_delay,
                   help="Length of delay between sending OTAP commands (seconds)")
+parser.add_option("--delay_block", dest="delay_block", default=otap_options.inter_block_delay,
+                  help="Length of delay between sending OTAP blocks (seconds)")
 parser.add_option("--nostart", dest="autorun", default=True,
                   action="store_false",
                   help="Don't start running the OTAP process automatically (use interactive mode)")
@@ -90,7 +92,8 @@ parser.add_option("--nostart", dest="autorun", default=True,
 
 
 # update values in OTAP options
-otap_options = otap_options._replace(inter_command_delay=int(options.delay))
+otap_options = otap_options._replace(inter_command_delay=int(options.delay_command))
+otap_options = otap_options._replace(inter_block_delay=int(options.delay_block))
 otap_options = otap_options._replace(otap_port=options.otap_port)
 
 #============================ logging =========================================

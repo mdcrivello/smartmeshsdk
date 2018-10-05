@@ -41,11 +41,12 @@ BROADCAST_ADDR = 8 * [ 0xFF, ]
 
 # delays and timeouts
 
-OtapOptions = namedtuple('OtapOptions', 'broadcast_threshold retry_delay data_retries inter_command_delay post_data_delay wait_timeout reliable_retry_delay reliable_command_timeout reliable_max_retries otap_port')
+OtapOptions = namedtuple('OtapOptions', 'broadcast_threshold retry_delay data_retries inter_block_delay inter_command_delay post_data_delay wait_timeout reliable_retry_delay reliable_command_timeout reliable_max_retries otap_port')
 
 RETRY_DELAY = 1       # retry delay if Picard can't accept the command
 DATA_RETRIES = 10     # number of retries before skipping the block 
 # TODO: skip or fail?
+INTER_BLOCK_DELAY = 3 # inter-packet delay for OTAP blocks
 INTER_COMMAND_DELAY = 3 # inter-packet delay for OTAP commands
 POST_DATA_DELAY = 30   # delay after sending all data before sending a status query
 WAIT_TIMEOUT = 10      # internal timeout for resetting waits
@@ -55,7 +56,8 @@ DEFAULT_OPTIONS = OtapOptions(
     broadcast_threshold = BROADCAST_THRESHOLD,
     retry_delay = RETRY_DELAY,
     data_retries = DATA_RETRIES,
-    inter_command_delay = INTER_COMMAND_DELAY,
+    inter_block_delay = inter_block_delay,
+    inter_command_delay = inter_command_delay,
     post_data_delay = POST_DATA_DELAY,
     wait_timeout = WAIT_TIMEOUT,
     reliable_retry_delay = ReliableCommander.RETRY_DELAY,
@@ -408,7 +410,7 @@ class OTAPCommunicator(object):
                     log.info('Sending block %d via broadcast' % (bnum))
                     self.send_otap_cmd(BROADCAST_ADDR, OTAP.DATA_CMD, cmd.serialize())
                 # wait for inter-command delay
-                time.sleep(self.options.inter_command_delay)
+                time.sleep(self.options.inter_block_delay)
 
         except IOError:
             log.error('Manager disconnected. Cancelling OTAP operation')
