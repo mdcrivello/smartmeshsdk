@@ -85,6 +85,12 @@ parser.add_option("--delay_command", dest="delay_command", default=otap_options.
                   help="Length of delay between sending OTAP commands (seconds)")
 parser.add_option("--delay_block", dest="delay_block", default=otap_options.inter_block_delay,
                   help="Length of delay between sending OTAP blocks (seconds)")
+parser.add_option("--reliable_retry_delay", dest="reliable_retry_delay", default=otap_options.reliable_retry_delay,
+                  help="Length of time in between reliable cmd retries (seconds)")
+parser.add_option("--reliable_command_timeout", dest="reliable_command_timeout", default=otap_options.reliable_command_timeout,
+                  help="Length of reliable command timeoue (seconds)")
+parser.add_option("--reliable_max_retries", dest="reliable_max_retries", default=otap_options.reliable_max_retries,
+                  help="Number of reliable cmd retries")
 parser.add_option("--nostart", dest="autorun", default=True,
                   action="store_false",
                   help="Don't start running the OTAP process automatically (use interactive mode)")
@@ -95,6 +101,13 @@ parser.add_option("--nostart", dest="autorun", default=True,
 otap_options = otap_options._replace(inter_command_delay=int(options.delay_command))
 otap_options = otap_options._replace(inter_block_delay=int(options.delay_block))
 otap_options = otap_options._replace(otap_port=options.otap_port)
+otap_options = otap_options._replace(reliable_retry_delay=int(options.reliable_retry_delay))
+otap_options = otap_options._replace(reliable_command_timeout=int(options.reliable_command_timeout))
+otap_options = otap_options._replace(reliable_max_retries=int(options.reliable_max_retries))
+
+etry_delay = options.reliable_retry_delay,
+command_timeout = options.reliable_command_timeout,
+max_retries = options.reliable_max_retries
 
 #============================ logging =========================================
 
